@@ -20,12 +20,18 @@ export async function POST(req) {
         { status: 409 }
       );
     } else {
-      const savedUser = await new User({ name, email, password: await bcrypt.hash(password, 10) }).save();
+      const savedUser = await new User({
+        name,
+        email,
+        password: await bcrypt.hash(password, 10),
+      }).save();
       await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id });
-      return NextResponse.json({ success: 'Registration successful.' });
+      return NextResponse.json({
+        success: 'Registration successful. Please log in.',
+      });
     }
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.log(error);
+    return NextResponse.json({ error: 'Server error, try again', error }, { status: 500 });
   }
 }
