@@ -3,15 +3,14 @@ import dbConnect from '@/utils/dbConnect';
 import User from '@/models/user';
 import bcrypt from 'bcrypt';
 
+import { sendEmail } from '@/utils/emailer';
+
 export async function POST(req) {
   const _req = await req.json();
-  //console.log(_req);
-
   await dbConnect();
   try {
     const { name, email, password } = _req;
     //check is email already exists
-
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -21,7 +20,8 @@ export async function POST(req) {
         { status: 409 }
       );
     } else {
-      await new User({ name, email, password: await bcrypt.hash(password, 10) }).save();
+      const savedUser = await new User({ name, email, password: await bcrypt.hash(password, 10) }).save();
+      await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id });
       return NextResponse.json({ success: 'Registration successful.' });
     }
   } catch (err) {
